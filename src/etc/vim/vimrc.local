@@ -1,0 +1,123 @@
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" melloVIM
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+unlet! skip_defaults_vim
+source $VIMRUNTIME/defaults.vim
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+syntax enable
+syntax on
+
+filetype plugin on
+filetype indent on
+
+set autoread               "auto read if file changes externally
+set backspace=start,indent "allow better backspacing, except across EOL
+set history=1000           "command history buffer len
+set linebreak              "do not wrap line in middle of a word (display option)
+set number                 "display line numbers
+set mouse=a                "enable mouse, primarily to not copy/paste line #s
+set nofoldenable           "do not hide/fold code
+set nowrap                 "do not wrap long lines (display option)
+set ruler                  "display cursor position
+set showmatch              "show matching {[()]}
+set title                  "display filename
+set undolevels=1000        "undo buffer len
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" searching
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set hlsearch               "highlight search results
+set ignorecase             "an all lowercase string makes search case insensitive
+set incsearch              "show incremental, partial matches
+set smartcase              "an uppercase char in string makes search case sensitive
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" autocmd, commands, mappings
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+autocmd CursorHold,CursorHoldI *  checktime "force refresh buffer for autoread
+autocmd FocusGained,BufEnter   *  checktime "force refresh buffer for autoread
+autocmd BufWritePre            * :set fileformat=unix "force unix line endings
+autocmd BufWritePre            * :call StripTrailingWhitespace()
+
+" :h last-position-jump
+autocmd BufReadPost *
+  \ if line("'\"") >= 1 && line("'\"") <= line("$") && &ft !~# 'commit'
+  \ |   exe "normal! g`\""
+  \ | endif
+
+nmap <leader>q  :q!<CR>
+nmap <leader>w  :w!<CR>
+nmap <leader>x  :call ClearUndoBuffer()<CR>:x!<CR>
+nmap <leader>nn :NERDTreeToggle<CR>
+
+command! W execute 'w !sudo tee % > /dev/null' <bar> edit!
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" aesthetics, font
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+try
+  colorscheme gruvbox
+catch
+  try
+    colorscheme desert
+  catch
+  endtry
+endtry
+
+set background=dark
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" text, tab, indent
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set encoding=utf8
+set fileformats=unix,dos,mac
+
+set expandtab     "convert <Tab> to spaces
+set noautoindent  "do not copy indent settings from previous line on <CR>
+set nosmartindent "do not guess what the indent should be
+set nosmarttab    "always use shiftwidth for <Tab>
+set shiftwidth=4  "number of spaces for (auto)indent
+set softtabstop=4 "number of spaces for <Tab>
+set tabstop=4     "number of spaces for <Tab>
+set textwidth=0   "do not wrap (insert EOL) based on line length
+set wrapmargin=0  "do not wrap (insert EOL) based on line length
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" undo, temp file locations
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+try
+  set backupdir=/tmp// "backup file directory
+  set directory=/tmp// "swap   file directory
+  set undodir=/tmp//   "undo   file directory
+
+  set undofile         "enable persistent undo
+catch
+endtry
+
+set nobackup
+set noswapfile
+set nowritebackup
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" functions
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" :h clear-undo
+function! ClearUndoBuffer()
+  let old_undolevels = &undolevels
+  set undolevels=-1
+  exe "normal a \<BS>\<Esc>"
+  let &undolevels = old_undolevels
+  unlet old_undolevels
+endfunction
+
+function! StripTrailingWhitespace()
+    let save_cursor = getpos(".")
+    let old_query   = getreg('/')
+
+    silent! %s/\s\+$//e
+
+    call setpos('.', save_cursor)
+    call setreg('/', old_query)
+endfunction
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
